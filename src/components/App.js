@@ -39,6 +39,11 @@ const App = () => {
         console.log(marketplace)
         setMarketplace(marketplace)
         const productCount = await marketplace.methods.productCount().call()
+        setProductCount(productCount)
+        for (let i = 1; i <= productCount; i++) {
+          const product = await marketplace.methods.products(i).call()
+          setProducts([...products, product])
+        }
         console.log(productCount.toString())
         setLoading(false)
       } else {
@@ -52,12 +57,20 @@ const App = () => {
   }, [])
 
   const createProduct = (name, price) => {
+    console.log(name, price)
     setLoading(true)
     marketplace.methods.createProduct(name, price)
     .send({from: account})
     .once('receipt', (receipt) => {
       setLoading(false)
     })
+  }
+
+  const purchaseProduct = (id, price) => {
+    setLoading(true)
+    marketplace.methods.purchaseProduct(id)
+    .send({ from: account, value: price })
+    setLoading(false)
   }
 
   return (
@@ -68,7 +81,10 @@ const App = () => {
           <main role="main" className="col-lg-12 d-flex text-center">
             { loading
               ? <div id="loader" className="text-center"><p className="text-center">Loading...</p></div>
-              : <Main createProduct={createProduct} />
+              : <Main
+                products={products}
+                createProduct={createProduct}
+                purchaseProduct={purchaseProduct} />
             }
           </main>
         </div>

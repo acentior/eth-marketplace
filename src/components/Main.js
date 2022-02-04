@@ -8,15 +8,18 @@ const Main = (props) => {
       <h1>Add Product</h1>
       <form onSubmit={(event) => {
         event.preventDefault()
-        const name = productName
+        const name = productName.toString()
         const price = window.web3.utils.toWei(productPrice.toString(), 'Ether')
+        console.log(price, name)
         props.createProduct(name, price)
       }}>
         <div className="form-group mr-sm-2">
           <input
             id="productName"
             type="text"
-            ref={(input) => setProductName(input)}
+            onChange={(event) => setProductName(event.target.value)}
+            value = {productName}
+            // ref={(input) => setProductName(input)}
             className="form-control"
             placeholder="Product Name"
             required />
@@ -24,8 +27,9 @@ const Main = (props) => {
         <div className="form-group mr-sm-2">
           <input
             id="productPrice"
-            type="text"
-            ref={(input) => setProductName(input)}
+            type="number"
+            onChange={(event) => setProductPrice(event.target.value)}
+            value = {productPrice}
             className="form-control"
             placeholder="Product Price"
             required />
@@ -45,27 +49,31 @@ const Main = (props) => {
           </tr>
         </thead>
         <tbody id="productList">
-          <tr>
-            <th scope="row">1</th>
-            <td>iPhone x</td>
-            <td>1 Eth</td>
-            <td>0x39C7BC5496f4eaaa1fF75d88E079C22f0519E7b9</td>
-            <td><button className="buyButton">Buy</button></td>
-          </tr>
-          <tr>
-            <th scope="row">2</th>
-            <td>Macbook Pro</td>
-            <td>3 eth</td>
-            <td>0x39C7BC5496f4eaaa1fF75d88E079C22f0519E7b9</td>
-            <td><button className="buyButton">Buy</button></td>
-          </tr>
-          <tr>
-            <th scope="row">3</th>
-            <td>Airpods</td>
-            <td>0.5 eth</td>
-            <td>0x39C7BC5496f4eaaa1fF75d88E079C22f0519E7b9</td>
-            <td><button className="buyButton">Buy</button></td>
-          </tr>
+          { props.products.map((product, key) => {
+            return (
+              <tr key={key}>
+                <th scope="row">{product.id.toString()}</th>
+                <td>{product.name}</td>
+                <td>{window.web3.utils.fromWei(product.price.toString(), 'Ether')}</td>
+                <td>{product.owner}</td>
+                <td>
+                  { !product.purchased
+                    ? <button
+                        className="buyButton"
+                        name={product.id}
+                        value={product.price}
+                        onClick={(event) => {
+                          props.purchaseProduct(event.target.name, event.target.value)
+                        }}
+                      >
+                        Buy
+                      </button>
+                    : null
+                  }
+                </td>
+              </tr>
+            )
+          }) }
         </tbody>
       </table>
     </div>
