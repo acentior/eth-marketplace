@@ -4,18 +4,20 @@ import logo from '../logo.png';
 import './App.css';
 import Navbar from './Navbar';
 import Marketplace from '../abis/Marketplace.json'
+import Main from './Main'
 
 const App = () => {
   const [account, setAccount] = useState('')
   const [productCount, setProductCount] = useState(0)
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [marketplace, setMarketplace] = useState(undefined)
 
   useEffect(() => {
     const loadWeb3 = async () => {
       if (window.ethereum) {
         window.web3 = new Web3(window.ethereum)
-        await window.ethereum.enable()
+        await window.ethereum.request({method: 'eth_requestAccounts'})
       }
       else if (window.web3) {
         window.web3 = new Web3(window.web3.currentProvider)
@@ -35,6 +37,10 @@ const App = () => {
       if (networkData) {
         const marketplace = web3.eth.Contract(Marketplace.abi, networkData.address)
         console.log(marketplace)
+        setMarketplace(marketplace)
+        const productCount = await marketplace.methods.productCount().call()
+        console.log(productCount.toString())
+        setLoading(false)
       } else {
         window.alert('Marketplace contract not deployed to detected network.')
       }
@@ -45,33 +51,25 @@ const App = () => {
     loadBlockchainData().catch(console.error)
   }, [])
 
+  const createProduct = (name, price) => {
+    setLoading(true)
+    marketplace.methods.createProduct(name, price)
+    .send({from: account})
+    .once('receipt', (receipt) => {
+      setLoading(false)
+    })
+  }
+
   return (
     <div>
       <Navbar account={account}/>
       <div className="container-fluid mt-5">
         <div className="row">
           <main role="main" className="col-lg-12 d-flex text-center">
-            <div className="content mr-auto ml-auto">
-              <a
-                href="http://www.dappuniversity.com/bootcamp"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img src={logo} className="App-logo" alt="logo" />
-              </a>
-              <h1>Dapp test</h1>
-              <p>
-                Edit <code>src/components/App.js</code> and save to reload.
-              </p>
-              <a
-                className="App-link"
-                href="http://www.dappuniversity.com/bootcamp"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                LEARN BLOCKCHAIN <u><b>NOW! </b></u>
-              </a>
-            </div>
+            { loading
+              ? <div id="loader" className="text-center"><p className="text-center">Loading...</p></div>
+              : <Main createProduct={createProduct} />
+            }
           </main>
         </div>
       </div>
